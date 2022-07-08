@@ -1,0 +1,123 @@
+from kivy.uix.textinput import TextInput
+from kivy.uix.button import Button
+from kivy.uix.gridlayout import GridLayout
+from kivy.lang import Builder
+from kivymd.app import MDApp
+from kivymd.uix.dialog import MDDialog
+from kivymd.uix.button import MDFlatButton
+from kivymd.uix.menu import MDDropdownMenu
+from googletrans import Translator
+
+translator = Translator()
+
+d=[]
+
+KV = '''
+MDBoxLayout:
+    orientation: "vertical"
+
+    MDToolbar:
+        title: "Àударушы!"
+   
+    MDRaisedButton:
+        id: button
+        text: " Тілді таңдаңыз! "
+        font_size:"18sp"
+        color:(1, 1, 1, 1)
+        background_color: 1,1,1,1
+        size:(50, 32)
+        size_hint:(1., .05)
+        pos:(100, 250)
+        on_release: app.menu.open()
+
+    GridLayout:
+        cols: 2
+        TextInput:
+            id: e1
+        TextInput:
+            id: e2
+
+    MDRaisedButton:
+        text: " Аудару "
+        font_size:"18sp"
+        color:(1, 1, 1, 1)
+        background_color: 1,1,1,1
+        size:(20, 32)
+        size_hint:(1., .05)
+        pos:(100, 150)
+        on_release: app.q1(*args)
+        
+
+    
+'''
+
+class Test(MDApp):
+    dialog = None
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.screen = Builder.load_string(KV)
+        menu_items = [
+            {
+                "text": f"Kazakh",
+                "viewclass": "OneLineListItem",
+                "on_release": lambda x=f"Kazakh": self.menu_callback(x),
+                },
+            {
+                "text": f"Russia",
+                "viewclass": "OneLineListItem",
+                "on_release": lambda x=f"Russia": self.menu_callback(x),
+                },
+            {
+                "text": f"English",
+                "viewclass": "OneLineListItem",
+                "on_release": lambda x=f"English": self.menu_callback(x),
+                }
+            ]
+        self.menu = MDDropdownMenu(
+            caller=self.screen.ids.button,
+            items=menu_items,
+            width_mult=4,
+        )
+    def menu_callback(self, text_item, *args):
+        d.append(text_item)
+        self.menu.dismiss()
+        
+    def build(self):
+        return self.screen
+
+    def q1(self, *args):
+        w1 = self.root.ids.e1.text
+        if w1=="":
+            self.root.ids.e1.text = ""
+            self.root.ids.e2.text = ""
+        elif len(d)==0:
+            self.dialog = MDDialog(
+                text=" Алдымен тілді таңдаңыз!",
+                buttons=[
+                    MDFlatButton(
+                        text="Жарайды", on_release=self.dialog_close,
+                        theme_text_color="Custom",
+                        text_color=self.theme_cls.primary_color,
+                    ),
+                    
+                ],
+            )
+            self.dialog.open()
+        else:
+            if d[-1] == 'Kazakh':
+                result = translator.translate(w1, dest='kk')
+                self.root.ids.e2.text = result.text
+            if d[-1] == 'Russia':
+                result = translator.translate(w1, dest='ru')
+                self.root.ids.e2.text = result.text
+            if d[-1] == 'English':
+                result = translator.translate(w1, dest='en')
+                self.root.ids.e2.text = result.text
+            
+    def dialog_close(self, *args):
+            self.dialog.dismiss(force=True)
+        
+Test().run()
+
+#googletrans-3.1.0a0
